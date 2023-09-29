@@ -47,24 +47,17 @@ jobs:
           target: i686-pc-windows-msvc
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+    - run: rustup target add ${{ matrix.target }}
+    - run: rustup toolchain install stable
+    - uses: Swatinem/rust-cache@v2
       with:
-        fetch-depth: 1
-
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
-
+        save-if: ${{ github.ref == 'refs/heads/master' }}
     - name: cargo build
-      run: cargo build --release --all-features
-
+      run: cargo build --target ${{ matrix.target }} --release --all-features
     - name: strip paperback binary
       if: matrix.build == 'linux' || matrix.build == 'macos'
       run: strip target/release/paperback
-
     - name: upload unix binaries
       uses: actions/upload-artifact@v2
       if: contains(matrix.build, 'win') == false
